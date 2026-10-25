@@ -20,7 +20,6 @@
     return a;
   };
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-  const clean = s => String(s).replace(/[<>&"]/g, '').trim();
   const HI_DIGITS = '०१२३४५६७८९';
   const num = n => settings.digits === 'hi' ? String(n).replace(/\d/g, d => HI_DIGITS[d]) : String(n);
   const NUM_WORDS = ['', 'एक', 'दो', 'तीन', 'चार', 'पाँच', 'छह'];
@@ -35,9 +34,14 @@
     ['#f77f00', '#fcbf49'], ['#ef476f', '#ffd166'], ['#588157', '#c5e1a5'], ['#9d4edd', '#ff9e00'],
   ];
 
-  const AVATARS = ['🐯', '🦚', '🐘', '🐒', '🐫', '🦁', '🐢', '🦜', '🐄', '🐍'];
-  const COLORS = ['#ff4d6d', '#00b4d8', '#ffb703', '#8338ec'];
-  const DEFAULT_NAMES = ['खिलाड़ी १', 'खिलाड़ी २', 'खिलाड़ी ३', 'खिलाड़ी ४'];
+  // Players are just animals: pick 2–4 of these. The Hindi name is shown in messages.
+  const ANIMALS = [
+    { e: '🐯', n: 'बाघ', c: '#ff4d6d' },
+    { e: '🦚', n: 'मोर', c: '#00b4d8' },
+    { e: '🐘', n: 'हाथी', c: '#ffb703' },
+    { e: '🐒', n: 'बंदर', c: '#8338ec' },
+  ];
+  const animalPlayer = a => ({ name: a.n, avatar: a.e, color: a.c });
 
   const MODES = [
     { id: 'dice-first', t: '🎲 ➜ ❓ पहले पासा', d: 'पासा फेंको, फिर सही जवाब दो — तभी गोटी चलेगी।' },
@@ -73,6 +77,11 @@
       if (s) {
         settings = { ...DEFAULT_SETTINGS, ...s.settings };
         game = s.game || null;
+        // older saves had typed player names; use the animal's name instead
+        if (game && game.players) game.players.forEach(p => {
+          const a = ANIMALS.find(x => x.e === p.avatar);
+          if (a) Object.assign(p, animalPlayer(a));
+        });
       }
     } catch (e) { /* storage unavailable */ }
   }
@@ -529,13 +538,13 @@
         <button class="big-btn" data-act="again">🔁 फिर से खेलो</button>
         <button class="soft-btn" data-act="setup">⚙️ नया खेल</button>
       </div>`;
-    $('[data-act=again]', card).onclick = () => { closeModal(); newGame(game.players.map(q => ({ name: q.name, avatar: q.avatar }))); };
+    $('[data-act=again]', card).onclick = () => { closeModal(); newGame(game.players.map(q => ({ name: q.name, avatar: q.avatar, color: q.color }))); };
     $('[data-act=setup]', card).onclick = () => openSetup();
   }
 
   function newGame(players) {
     game = {
-      players: players.map((p, i) => ({ name: p.name, avatar: p.avatar, color: COLORS[i], pos: 0, correct: 0, asked: 0 })),
+      players: players.map(p => ({ name: p.name, avatar: p.avatar, color: p.color, pos: 0, correct: 0, asked: 0 })),
       turn: 0,
       phase: startPhase(),
       lastRoll: null,
@@ -878,21 +887,19 @@
     const card = openModal('setup');
     if (first) card.dataset.first = '1'; else delete card.dataset.first;
     const s = { ...settings };
-    const existing = game ? game.players : [];
-    const ps = [0, 1, 2, 3].map(i => existing[i] ? { name: existing[i].name, avatar: existing[i].avatar } : { name: DEFAULT_NAMES[i], avatar: AVATARS[i] });
-    let count = game ? game.players.length : 2;
+    // which animals are picked (indexes into ANIMALS), kept in board order
+    let picked = game ? ANIMALS.map((a, i) => i).filter(i => game.players.some(p => p.avatar === ANIMALS[i].e)) : [];
+    if (picked.length < 2) picked = [0, 1];
     const canContinue = !first && game && !game.over;
     card.innerHTML = `
       <h2 class="m-title">🎲 ${first ? 'खेल की तैयारी' : 'सेटिंग / नया खेल'}</h2>
       <section class="field">
-        <h3>👥 कितने खिलाड़ी?</h3>
-        <div class="seg" id="cnt">${[2, 3, 4].map(n => `<button data-n="${n}">${num(n)}</button>`).join('')}</div>
-        <div class="prow-list">${ps.map((p, i) => `
-          <div class="prow" data-i="${i}">
-            <button class="av" style="background:${COLORS[i]}" title="जानवर बदलो">${p.avatar}</button>
-            <input maxlength="14" value="${p.name}" aria-label="खिलाड़ी का नाम">
-          </div>`).join('')}</div>
-        <p class="hint">जानवर पर दबाकर अपनी गोटी बदलो, और अपना नाम लिखो।</p>
+        <h3>👥 कौन-कौन खेलेगा?</h3>
+        <div class="pick">${ANIMALS.map((a, i) => `
+          <button class="pick-av" data-i="${i}" style="--c:${a.c}" aria-pressed="false">
+            <span class="em">${a.e}</span><b>${a.n}</b>
+          </button>`).join('')}</div>
+        <p class="hint" id="pickHint"></p>
       </section>
       <section class="field">
         <h3>❓ प्रश्न कब आएँ?</h3>
@@ -917,25 +924,32 @@
           <div class="seg" id="dig"><button data-d="hi">१२३</button><button data-d="en">123</button></div>
         </div>
       </section>
-      ${canContinue ? '<p class="hint">खिलाड़ियों की संख्या बदलने के लिए नया खेल शुरू करो।</p>' : ''}
       <div class="q-actions">
         ${canContinue ? '<button class="soft-btn" data-act="cont">↩ खेल जारी रखो</button>' : ''}
         <button class="big-btn" data-act="start">🚀 नया खेल शुरू करो</button>
       </div>`;
 
     const paint = () => {
-      $$('#cnt button', card).forEach(b => b.classList.toggle('on', +b.dataset.n === count));
-      $$('.prow', card).forEach((r, i) => r.classList.toggle('hidden', i >= count));
+      $$('.pick-av', card).forEach(b => {
+        const on = picked.includes(+b.dataset.i);
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', on);
+      });
+      $('#pickHint', card).textContent = picked.length < 2
+        ? 'कम से कम २ जानवर चुनो।'
+        : `${picked.map(i => ANIMALS[i].e).join(' ')} खेलेंगे! (२ से ४ जानवर चुन सकते हो)`;
+      $('[data-act=start]', card).disabled = picked.length < 2;
+      // "continue" only makes sense with the same animals that are already on the board
+      const cont = $('[data-act=cont]', card);
+      if (cont) cont.classList.toggle('hidden', picked.map(i => ANIMALS[i].e).join() !== game.players.map(p => p.avatar).join());
       $$('.mode', card).forEach(b => b.classList.toggle('on', b.dataset.m === s.mode));
       $$('#dig button', card).forEach(b => b.classList.toggle('on', b.dataset.d === s.digits));
     };
-    $$('#cnt button', card).forEach(b => b.onclick = () => { count = +b.dataset.n; paint(); });
-    $$('.prow', card).forEach((r, i) => {
-      $('.av', r).onclick = () => {
-        ps[i].avatar = AVATARS[(AVATARS.indexOf(ps[i].avatar) + 1) % AVATARS.length];
-        $('.av', r).textContent = ps[i].avatar;
-        sfx.pop();
-      };
+    $$('.pick-av', card).forEach(b => b.onclick = () => {
+      const i = +b.dataset.i;
+      picked = picked.includes(i) ? picked.filter(x => x !== i) : [...picked, i].sort();
+      sfx.pop();
+      paint();
     });
     $$('.mode', card).forEach(b => b.onclick = () => { s.mode = b.dataset.m; paint(); });
     $$('.switch input', card).forEach(inp => inp.onchange = () => { s[inp.dataset.k] = inp.checked; });
@@ -945,26 +959,21 @@
     $$('#dig button', card).forEach(b => b.onclick = () => { s.digits = b.dataset.d; paint(); });
     paint();
 
-    const readPlayers = () => $$('.prow', card).slice(0, count).map((r, i) => ({
-      name: clean($('input', r).value) || DEFAULT_NAMES[i],
-      avatar: ps[i].avatar,
-    }));
     const applySettings = () => {
       const levelChanged = s.level !== settings.level;
       settings = { ...s };
       if (levelChanged && game) game.deck = [];
     };
     $('[data-act=start]', card).onclick = () => {
-      const players = readPlayers();
+      if (picked.length < 2) return;
+      const players = picked.map(i => animalPlayer(ANIMALS[i]));
       applySettings();
       closeModal();
       newGame(players);
     };
     const cont = $('[data-act=cont]', card);
     if (cont) cont.onclick = () => {
-      const players = readPlayers();
       applySettings();
-      players.forEach((p, i) => { if (game.players[i]) Object.assign(game.players[i], p); });
       if (game.phase === 'roll' || game.phase === 'ask') game.phase = startPhase();
       closeModal();
       renderAll();
@@ -1017,7 +1026,7 @@
     if (game.phase === 'move') showTarget(game.target);
     say(game.over ? '🏆 पिछला खेल ख़त्म हो गया था। ⚙️ दबाकर नया खेल शुरू करो!' : '↩ पिछला खेल वहीं से जारी है। 🎲');
   } else {
-    newGame([0, 1].map(i => ({ name: DEFAULT_NAMES[i], avatar: AVATARS[i] })));
+    newGame([ANIMALS[0], ANIMALS[1]].map(animalPlayer));
     openSetup(true);
   }
 })();

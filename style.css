@@ -429,11 +429,41 @@ h1 { margin: 0; font-size: 1.8rem; line-height: 1; }
 .seg { display: inline-flex; gap: 6px; flex-wrap: wrap; }
 .seg button { min-width: 54px; padding: 6px 14px; border-radius: 12px; border: 3px solid #e8e1f7; background: #fff; font-weight: 800; font-size: 1.1rem; }
 .seg button.on { border-color: var(--purple); background: #f1e9ff; }
-.prow-list { display: grid; gap: 8px; margin-top: 10px; }
-.prow { display: flex; gap: 10px; align-items: center; }
-.prow .av { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 3px 0 rgba(0,0,0,.15); font-size: 24px; }
-.prow input { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 12px; border: 3px solid #e8e1f7; font-size: 1.1rem; }
-.prow input:focus { outline: none; border-color: var(--purple); }
+.pick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.pick-av {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 10px 4px 8px;
+  border-radius: 18px;
+  border: 3px solid #e8e1f7;
+  background: #fff;
+  filter: grayscale(.7);
+  opacity: .6;
+  transition: transform .15s, opacity .15s, filter .15s;
+}
+.pick-av .em {
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 34px;
+  background: var(--c);
+  border: 3px solid #fff;
+  box-shadow: 0 3px 0 rgba(0,0,0,.15);
+}
+.pick-av b { font-size: 1.05rem; }
+.pick-av:hover { transform: translateY(-2px); }
+.pick-av.on { filter: none; opacity: 1; border-color: var(--c); background: #fffaf0; transform: scale(1.04); }
+.pick-av.on::after {
+  content: '✓';
+  position: absolute; top: -8px; right: -8px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: #2dc653; color: #fff;
+  font-weight: 800;
+  border: 2px solid #fff;
+}
+@media (max-width: 420px) { .pick-av .em { width: 48px; height: 48px; font-size: 28px; } }
 .mode-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 @media (max-width: 560px) { .mode-cards { grid-template-columns: 1fr; } }
 .mode { display: flex; flex-direction: column; gap: 4px; padding: 10px; border-radius: 16px; border: 3px solid #e8e1f7; background: #fff; text-align: left; }
