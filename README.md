@@ -25,6 +25,9 @@ A colourful snakes-and-ladders game in Hindi, with trivia about India: national 
 - **सिर्फ़ खेल**: plain snakes and ladders, no questions
 - Difficulty (⭐ / ⭐⭐ / ⭐⭐⭐), Devanagari or Latin digits
 
+## Updating the live site
+After changing `style.css` or anything in `js/`, bump the `?v=` number on those links in `index.html`, so browsers fetch the new files instead of old cached ones.
+
 ## Adding questions
 All questions are in [`js/questions.js`](js/questions.js). The comment at the top of that file describes the format. Copy an existing question and change it.
 
