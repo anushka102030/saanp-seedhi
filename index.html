@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>साँप-सीढ़ी: भारत ज्ञान यात्रा</title>
+  <meta name="description" content="हिंदी में भारत के बारे में रंग-बिरंगी प्रश्नोत्तरी वाला साँप-सीढ़ी खेल">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo">🐍🪜</span>
+      <div>
+        <h1>साँप-सीढ़ी</h1>
+        <p>भारत ज्ञान यात्रा 🇮🇳</p>
+      </div>
+    </div>
+    <nav>
+      <button id="rulesBtn" class="icon-btn" title="खेल के नियम" aria-label="खेल के नियम">📖</button>
+      <button id="soundBtn" class="icon-btn" title="आवाज़" aria-label="आवाज़">🔊</button>
+      <button id="newBtn" class="icon-btn" title="सेटिंग / नया खेल" aria-label="सेटिंग / नया खेल">⚙️</button>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <section class="board-wrap">
+      <div id="board" class="board">
+        <div id="cells" class="cells"></div>
+        <svg id="art" viewBox="0 0 100 100" aria-hidden="true"></svg>
+        <div id="pawns" class="pawns"></div>
+      </div>
+      <div class="start-strip">🚩 शुरुआत</div>
+    </section>
+
+    <aside class="panel">
+      <div id="turnCard" class="turn-card"></div>
+      <div class="dice-zone">
+        <button id="dice" class="dice" aria-label="पासा फेंको"></button>
+        <div id="diceWord" class="dice-word"></div>
+      </div>
+      <button id="mainBtn" class="big-btn"></button>
+      <button id="autoBtn" class="soft-btn hidden">🤖 गोटी अपने-आप चलाओ</button>
+      <div id="message" class="message" aria-live="polite"></div>
+      <ul id="playerList" class="player-list"></ul>
+      <p class="tip">✋ किसी भी गोटी को पकड़कर बोर्ड पर कहीं भी रख सकते हो।</p>
+    </aside>
+  </main>
+
+  <footer class="foot">💛 हिंदी सीखने वालों के लिए बनाया गया · साँप-सीढ़ी भारत का ही खेल है — इसे “मोक्षपटम” कहते थे!</footer>
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div id="modalCard" class="modal-card"></div>
+  </div>
+  <canvas id="confetti"></canvas>
+
+  <script src="js/questions.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
