@@ -34,12 +34,16 @@
     ['#f77f00', '#fcbf49'], ['#ef476f', '#ffd166'], ['#588157', '#c5e1a5'], ['#9d4edd', '#ff9e00'],
   ];
 
-  // Players are just animal pawns (no names): pick 2–4 of these.
+  // Players are just animal pawns (no names): pick any 2 or more of these.
   const ANIMALS = [
     { e: '🐯', c: '#ff4d6d' },
     { e: '🦚', c: '#00b4d8' },
     { e: '🐘', c: '#ffb703' },
     { e: '🐒', c: '#8338ec' },
+    { e: '🦁', c: '#f77f00' },
+    { e: '🐢', c: '#06d6a0' },
+    { e: '🐫', c: '#3a86ff' },
+    { e: '🦏', c: '#e5989b' },
   ];
   const animalPlayer = a => ({ avatar: a.e, color: a.c });
 
@@ -250,8 +254,14 @@
     const c = cellXY(p.pos);
     const same = game.players.map((q, j) => j).filter(j => game.players[j].pos === p.pos);
     if (same.length < 2) return c;
-    const off = [[-2.2, -2.2], [2.2, -2.2], [-2.2, 2.2], [2.2, 2.2]][same.indexOf(i)];
-    return { x: c.x + off[0], y: c.y + off[1] };
+    const k = same.indexOf(i);
+    if (same.length <= 4) {
+      const off = [[-2.2, -2.2], [2.2, -2.2], [-2.2, 2.2], [2.2, 2.2]][k];
+      return { x: c.x + off[0], y: c.y + off[1] };
+    }
+    // 5+ pawns on one square: spread them in a small ring
+    const a = (2 * Math.PI * k) / same.length - Math.PI / 2;
+    return { x: c.x + 2.8 * Math.cos(a), y: c.y + 2.8 * Math.sin(a) };
   }
 
   function renderPawns() {
@@ -887,8 +897,8 @@
     if (first) card.dataset.first = '1'; else delete card.dataset.first;
     const s = { ...settings };
     // which animals are picked (indexes into ANIMALS), kept in board order
-    let picked = game ? ANIMALS.map((a, i) => i).filter(i => game.players.some(p => p.avatar === ANIMALS[i].e)) : [];
-    if (picked.length < 2) picked = [0, 1];
+    // a brand-new game starts with nothing picked; later, the animals already playing are picked
+    let picked = first || !game ? [] : ANIMALS.map((a, i) => i).filter(i => game.players.some(p => p.avatar === ANIMALS[i].e));
     const canContinue = !first && game && !game.over;
     card.innerHTML = `
       <h2 class="m-title">🎲 ${first ? 'खेल की तैयारी' : 'सेटिंग / नया खेल'}</h2>
@@ -935,8 +945,8 @@
         b.setAttribute('aria-pressed', on);
       });
       $('#pickHint', card).textContent = picked.length < 2
-        ? 'कम से कम २ जानवर चुनो।'
-        : `${picked.map(i => ANIMALS[i].e).join(' ')} खेलेंगे! (२ से ४ जानवर चुन सकते हो)`;
+        ? 'खेलने वाले जानवर चुनो — कम से कम २।'
+        : `${picked.map(i => ANIMALS[i].e).join(' ')} खेलेंगे! (जितने चाहो उतने जानवर चुनो)`;
       $('[data-act=start]', card).disabled = picked.length < 2;
       // "continue" only makes sense with the same animals that are already on the board
       const cont = $('[data-act=cont]', card);
@@ -946,7 +956,7 @@
     };
     $$('.pick-av', card).forEach(b => b.onclick = () => {
       const i = +b.dataset.i;
-      picked = picked.includes(i) ? picked.filter(x => x !== i) : [...picked, i].sort();
+      picked = picked.includes(i) ? picked.filter(x => x !== i) : [...picked, i].sort((x, y) => x - y);
       sfx.pop();
       paint();
     });

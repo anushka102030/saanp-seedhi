@@ -3,6 +3,7 @@
 A colourful snakes-and-ladders game in Hindi, with trivia about India: national symbols, languages, states, festivals, food, art and some unusual facts. Made for Hindi learners.
 
 ## How to play
+- Pick 2 or more animal pawns (🐯 🦚 🐘 🐒 🦁 🐢 🐫 🦏), no names needed.
 - Roll the dice 🎲 and answer a question. If you get it right, your pawn moves.
 - 🐍 Landing on a snake's head gives you one question to escape it.
 - 🪜 Ladders take you straight up (you can turn on a question for ladders too).
@@ -22,7 +23,7 @@ A colourful snakes-and-ladders game in Hindi, with trivia about India: national 
 - **पहले पासा**: roll first, then answer to move (default)
 - **पहले प्रश्न**: answer first, then you get to roll
 - **सिर्फ़ खेल**: plain snakes and ladders, no questions
-- Difficulty (⭐ / ⭐⭐ / ⭐⭐⭐), Devanagari or Latin digits, 2–4 players
+- Difficulty (⭐ / ⭐⭐ / ⭐⭐⭐), Devanagari or Latin digits
 
 ## Adding questions
 All questions are in [`js/questions.js`](js/questions.js). The comment at the top of that file describes the format. Copy an existing question and change it.
