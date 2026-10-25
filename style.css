@@ -377,7 +377,8 @@ h1 { margin: 0; font-size: 1.8rem; line-height: 1; }
   -webkit-user-select: none;
 }
 .chip.sel { background: var(--purple); border-color: var(--purple); color: #fff; }
-.chip.dragging { position: fixed; z-index: 100; pointer-events: none; rotate: -4deg; scale: 1.08; box-shadow: 0 10px 20px rgba(0,0,0,.25); }
+.chip.ghost { position: fixed; z-index: 100; margin: 0; pointer-events: none; rotate: -4deg; scale: 1.08; box-shadow: 0 10px 20px rgba(0,0,0,.25); }
+.chip.placeholder { opacity: .3; }
 .chip small { font-weight: 600; color: #b00020; }
 
 /* match */

@@ -679,45 +679,63 @@
         sfx.pop();
         update();
       };
+      // A click that ends a drag must not also drop the tap-selected chip.
+      let justDragged = false;
       [...binEls, pool].forEach(t => t.addEventListener('click', e => {
-        if (e.target.closest('.chip') || !sel) return;
+        if (justDragged || e.target.closest('.chip') || !sel) return;
         placeInto(sel, t);
       }));
+      const targetAt = (x, y) => {
+        const under = document.elementFromPoint(x, y);
+        const t = under && (under.closest('.bin') || under.closest('.pool'));
+        return t && body.contains(t) ? t : null;
+      };
+      // Dragging moves a floating copy ("ghost") attached to <body>; the real chip
+      // stays in its box until it is dropped, so nothing is left floating.
       chips.forEach(ch => ch.addEventListener('pointerdown', e => {
-        if (body.classList.contains('locked')) return;
+        if (body.classList.contains('locked') || e.button > 0) return;
         e.preventDefault();
-        ch.setPointerCapture(e.pointerId);
-        const sx = e.clientX, sy = e.clientY;
-        const r = ch.getBoundingClientRect();
-        const ox = sx - r.left, oy = sy - r.top;
-        let drag = false, hover = null;
-        const targetAt = (x, y) => {
-          const under = document.elementFromPoint(x, y);
-          const t = under && (under.closest('.bin') || under.closest('.pool'));
-          return t && body.contains(t) ? t : null;
-        };
-        const mv = ev => {
-          if (!drag && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
-          if (!drag) { drag = true; ch.style.width = r.width + 'px'; ch.classList.add('dragging'); }
-          ch.style.left = (ev.clientX - ox) + 'px';
-          ch.style.top = (ev.clientY - oy) + 'px';
+        const id = e.pointerId, sx = e.clientX, sy = e.clientY;
+        let ghost = null, hover = null, ox = 0, oy = 0;
+        const move = ev => {
+          if (ev.pointerId !== id) return;
+          if (!ghost) {
+            if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
+            if (sel) { sel.classList.remove('sel'); sel = null; }
+            const r = ch.getBoundingClientRect();
+            ox = sx - r.left; oy = sy - r.top;
+            ghost = ch.cloneNode(true);
+            ghost.className = 'chip ghost';
+            ghost.style.width = r.width + 'px';
+            document.body.appendChild(ghost);
+            ch.classList.add('placeholder');
+          }
+          ghost.style.left = (ev.clientX - ox) + 'px';
+          ghost.style.top = (ev.clientY - oy) + 'px';
+          // scroll the question card when dragging near its top or bottom edge
+          const cr = modalCard.getBoundingClientRect();
+          if (ev.clientY > cr.bottom - 50) modalCard.scrollTop += 14;
+          else if (ev.clientY < cr.top + 50) modalCard.scrollTop -= 14;
           const t = targetAt(ev.clientX, ev.clientY);
           if (t !== hover) { if (hover) hover.classList.remove('hover'); hover = t; if (hover) hover.classList.add('hover'); }
         };
-        const up = ev => {
-          ch.removeEventListener('pointermove', mv);
-          ch.removeEventListener('pointerup', up);
-          ch.removeEventListener('pointercancel', up);
+        const end = ev => {
+          if (ev.pointerId !== id) return;
+          window.removeEventListener('pointermove', move);
+          window.removeEventListener('pointerup', end);
+          window.removeEventListener('pointercancel', end);
           if (hover) hover.classList.remove('hover');
-          if (!drag) { select(ch); return; }
-          const t = targetAt(ev.clientX, ev.clientY);
-          ch.classList.remove('dragging');
-          ch.style.left = ch.style.top = ch.style.width = '';
+          if (!ghost) { if (ev.type === 'pointerup') select(ch); return; }
+          ghost.remove();
+          ch.classList.remove('placeholder');
+          justDragged = true;
+          setTimeout(() => { justDragged = false; }, 0);
+          const t = ev.type === 'pointerup' ? targetAt(ev.clientX, ev.clientY) : null;
           if (t) placeInto(ch, t);
         };
-        ch.addEventListener('pointermove', mv);
-        ch.addEventListener('pointerup', up);
-        ch.addEventListener('pointercancel', up);
+        window.addEventListener('pointermove', move);
+        window.addEventListener('pointerup', end);
+        window.addEventListener('pointercancel', end);
       }));
       checkBtn.onclick = () => {
         let ok = true;
