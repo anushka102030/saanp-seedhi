@@ -272,7 +272,8 @@ h1 { margin: 0; font-size: 1.8rem; line-height: 1; }
 .player-list li.active { border-color: var(--c); background: #fff; }
 .pl-av { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; }
 .pl-name { flex: 1; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pl-meta { font-size: .9rem; text-align: right; line-height: 1.25; color: var(--muted); }
+.pl-meta { margin-left: auto; font-size: 1rem; text-align: right; line-height: 1.25; color: var(--muted); }
+.sc-av { font-size: 1.8rem; }
 .pl-meta b { color: var(--ink); }
 .tip { margin: 0; font-size: .9rem; color: var(--muted); }
 .foot { text-align: center; padding: 8px 16px 24px; color: var(--muted); font-size: .95rem; }
@@ -433,7 +434,7 @@ h1 { margin: 0; font-size: 1.8rem; line-height: 1; }
 .pick-av {
   position: relative;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 10px 4px 8px;
+  padding: 10px 4px;
   border-radius: 18px;
   border: 3px solid #e8e1f7;
   background: #fff;

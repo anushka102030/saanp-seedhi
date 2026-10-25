@@ -34,14 +34,14 @@
     ['#f77f00', '#fcbf49'], ['#ef476f', '#ffd166'], ['#588157', '#c5e1a5'], ['#9d4edd', '#ff9e00'],
   ];
 
-  // Players are just animals: pick 2–4 of these. The Hindi name is shown in messages.
+  // Players are just animal pawns (no names): pick 2–4 of these.
   const ANIMALS = [
-    { e: '🐯', n: 'बाघ', c: '#ff4d6d' },
-    { e: '🦚', n: 'मोर', c: '#00b4d8' },
-    { e: '🐘', n: 'हाथी', c: '#ffb703' },
-    { e: '🐒', n: 'बंदर', c: '#8338ec' },
+    { e: '🐯', c: '#ff4d6d' },
+    { e: '🦚', c: '#00b4d8' },
+    { e: '🐘', c: '#ffb703' },
+    { e: '🐒', c: '#8338ec' },
   ];
-  const animalPlayer = a => ({ name: a.n, avatar: a.e, color: a.c });
+  const animalPlayer = a => ({ avatar: a.e, color: a.c });
 
   const MODES = [
     { id: 'dice-first', t: '🎲 ➜ ❓ पहले पासा', d: 'पासा फेंको, फिर सही जवाब दो — तभी गोटी चलेगी।' },
@@ -77,9 +77,10 @@
       if (s) {
         settings = { ...DEFAULT_SETTINGS, ...s.settings };
         game = s.game || null;
-        // older saves had typed player names; use the animal's name instead
+        // older saves had player names and colours per seat; use the animal's colour, no name
         if (game && game.players) game.players.forEach(p => {
           const a = ANIMALS.find(x => x.e === p.avatar);
+          delete p.name;
           if (a) Object.assign(p, animalPlayer(a));
         });
       }
@@ -261,7 +262,6 @@
         d = el('div', 'pawn', p.avatar);
         d.dataset.i = i;
         d.style.background = p.color;
-        d.title = p.name;
         layer.appendChild(d);
         attachPawnDrag(d, i);
       }
@@ -316,7 +316,7 @@
     } else {
       renderPawns();
       save();
-      say(`✋ ${p.avatar} ${p.name} की गोटी ${n ? 'खाना ' + num(n) + ' पर' : 'शुरुआत पर'} रख दी गई।`);
+      say(`✋ ${p.avatar} की गोटी ${n ? 'खाना ' + num(n) + ' पर' : 'शुरुआत पर'} रख दी गई।`);
     }
   }
 
@@ -382,12 +382,11 @@
     b.innerHTML = game.over ? '🏆 खेल ख़त्म' : game.phase === 'ask' ? '❓ प्रश्न लो' : '🎲 पासा फेंको';
     $('#dice').disabled = !(canAct && game.phase === 'roll');
     $('#autoBtn').classList.toggle('hidden', game.phase !== 'move' || busy);
-    $('#turnCard').innerHTML = `<div class="tc-avatar" style="background:${p.color}">${p.avatar}</div><div><small>${game.over ? 'विजेता' : 'अब बारी है'}</small><b>${p.name}</b></div>`;
+    $('#turnCard').innerHTML = `<div class="tc-avatar" style="background:${p.color}">${p.avatar}</div><b>${game.over ? 'जीत गए! 🏆' : 'की बारी है'}</b>`;
     $('#playerList').innerHTML = game.players.map((q, i) => `
       <li class="${i === game.turn && !game.over ? 'active' : ''}" style="--c:${q.color}">
         <span class="pl-av" style="background:${q.color}">${q.avatar}</span>
-        <span class="pl-name">${q.name}</span>
-        <span class="pl-meta">खाना <b>${q.pos ? num(q.pos) : '—'}</b><br>✅ ${num(q.correct)}/${num(q.asked)}</span>
+        <span class="pl-meta">खाना <b>${q.pos ? num(q.pos) : '—'}</b> · ✅ ${num(q.correct)}/${num(q.asked)}</span>
       </li>`).join('');
     $('#soundBtn').textContent = settings.sound ? '🔊' : '🔇';
   }
@@ -409,11 +408,11 @@
       setBusy(false);
       if (ok) {
         game.phase = 'roll';
-        say(`👍 शाबाश ${p.name}! अब पासा फेंको 🎲`);
+        say(`👍 शाबाश ${p.avatar}! अब पासा फेंको 🎲`);
         renderControls();
         save();
       } else {
-        say(`😅 ${p.name} की बारी गई।`);
+        say(`😅 ${p.avatar} की बारी गई।`);
         endTurn(false);
       }
       return;
@@ -452,7 +451,7 @@
       game.phase = 'move';
       game.target = target;
       showTarget(target);
-      say(`✋ अब ${p.avatar} ${p.name} की गोटी को ${num(v)} कदम आगे — खाना ${num(target)} ⭐ — तक खिसकाओ।`);
+      say(`✋ अब ${p.avatar} की गोटी को ${num(v)} कदम आगे — खाना ${num(target)} ⭐ — तक खिसकाओ।`);
       setBusy(false);
       save();
     }
@@ -496,7 +495,7 @@
         await slide(p, LADDERS[n]);
       } else say('🪜 सीढ़ी छूट गई। कोई बात नहीं!');
     } else {
-      say(`${p.avatar} ${p.name} अब खाना ${num(n || 0)} पर है।`);
+      say(`${p.avatar} अब खाना ${num(n || 0)} पर है।`);
     }
     if (p.pos === 100) { win(p); return; }
     setBusy(false);
@@ -521,7 +520,7 @@
     save();
     renderPawns();
     renderControls();
-    say(`🏆 ${p.avatar} ${p.name} ${num(100)} पर पहुँच गए!`);
+    say(`🏆 ${p.avatar} ${num(100)} पर पहुँच गए!`);
     sfx.win();
     burst(220);
     setTimeout(() => burst(180), 700);
@@ -529,22 +528,22 @@
     const card = openModal('win');
     card.innerHTML = `
       <div class="trophy">🏆</div>
-      <h2 class="m-title">${p.avatar} ${p.name} जीत गए!</h2>
+      <h2 class="m-title">${p.avatar} जीत गए!</h2>
       <p>मोक्ष मिल गया! 🎉 सबसे पहले खाना ${num(100)} तक पहुँचे।</p>
       <table class="scores">
-        ${ranked.map(q => `<tr><td>${q.avatar} <b>${q.name}</b></td><td>खाना ${num(q.pos)}</td><td>✅ ${num(q.correct)}/${num(q.asked)} सही</td></tr>`).join('')}
+        ${ranked.map(q => `<tr><td class="sc-av">${q.avatar}</td><td>खाना ${num(q.pos)}</td><td>✅ ${num(q.correct)}/${num(q.asked)} सही</td></tr>`).join('')}
       </table>
       <div class="q-actions">
         <button class="big-btn" data-act="again">🔁 फिर से खेलो</button>
         <button class="soft-btn" data-act="setup">⚙️ नया खेल</button>
       </div>`;
-    $('[data-act=again]', card).onclick = () => { closeModal(); newGame(game.players.map(q => ({ name: q.name, avatar: q.avatar, color: q.color }))); };
+    $('[data-act=again]', card).onclick = () => { closeModal(); newGame(game.players.map(q => ({ avatar: q.avatar, color: q.color }))); };
     $('[data-act=setup]', card).onclick = () => openSetup();
   }
 
   function newGame(players) {
     game = {
-      players: players.map(p => ({ name: p.name, avatar: p.avatar, color: p.color, pos: 0, correct: 0, asked: 0 })),
+      players: players.map(p => ({ avatar: p.avatar, color: p.color, pos: 0, correct: 0, asked: 0 })),
       turn: 0,
       phase: startPhase(),
       lastRoll: null,
@@ -556,7 +555,7 @@
     renderAll();
     drawDice(1);
     $('#diceWord').textContent = '';
-    say(`🙏 नमस्ते! ${game.players[0].avatar} ${game.players[0].name} से शुरू करते हैं। ${game.phase === 'ask' ? '“प्रश्न लो” दबाओ!' : 'पासा फेंको! 🎲'}`);
+    say(`🙏 नमस्ते! ${game.players[0].avatar} से शुरू करते हैं। ${game.phase === 'ask' ? '“प्रश्न लो” दबाओ!' : 'पासा फेंको! 🎲'}`);
     save();
   }
 
@@ -579,7 +578,7 @@
       card.innerHTML = `
         <div class="q-top"><span class="q-type">${TYPE_LABEL[q.type]}</span><span class="q-lvl" title="कठिनाई">${'⭐'.repeat(q.lvl)}</span></div>
         ${ctx.ribbon ? `<div class="q-ribbon">${ctx.ribbon}</div>` : ''}
-        <div class="q-who"><span style="background:${p.color}">${p.avatar}</span> ${p.name} का सवाल</div>
+        <div class="q-who"><span style="background:${p.color}">${p.avatar}</span> का सवाल</div>
         ${q.img ? `<div class="q-img">${q.img}</div>` : ''}
         <h2 class="q-text">${q.q}</h2>
         <p class="q-en hidden">🔤 ${q.en}</p>
@@ -897,7 +896,7 @@
         <h3>👥 कौन-कौन खेलेगा?</h3>
         <div class="pick">${ANIMALS.map((a, i) => `
           <button class="pick-av" data-i="${i}" style="--c:${a.c}" aria-pressed="false">
-            <span class="em">${a.e}</span><b>${a.n}</b>
+            <span class="em">${a.e}</span>
           </button>`).join('')}</div>
         <p class="hint" id="pickHint"></p>
       </section>
