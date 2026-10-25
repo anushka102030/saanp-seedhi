@@ -353,7 +353,8 @@
   /* ---------- dice ---------- */
   const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
   function drawDice(v) {
-    $('#dice').innerHTML = Array.from({ length: 9 }, (_, k) => `<i class="${PIPS[v].includes(k + 1) ? 'on' : ''}"></i>`).join('');
+    // the grid lives on an inner span: some browsers (Safari) won't lay out a grid on a <button>
+    $('#dice').innerHTML = `<span class="face">${Array.from({ length: 9 }, (_, k) => `<i class="${PIPS[v].includes(k + 1) ? 'on' : ''}"></i>`).join('')}</span>`;
   }
   async function rollDice() {
     const d = $('#dice');
